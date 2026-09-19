@@ -46,17 +46,15 @@ package main
 
 import (
     "context"
-    "io"
     "os"
 
-    "github.com/commspliant/go-sdk/commspliant" // TODO: replace with real SDK import once published
+    "github.com/commspliant/go-sdk/commspliant"
 )
 
 func main() {
     ctx := context.Background()
 
-    // TODO: replace with real SDK call once published
-    client, err := commspliant.NewClient("ck_YOUR_API_KEY")
+    client, err := commspliant.NewClient("ck_YOUR_API_KEY", nil)
     if err != nil {
         panic(err)
     }
@@ -78,7 +76,7 @@ func main() {
     }
     defer out.Close()
 
-    if _, err := io.Copy(out, result.Body); err != nil {
+    if _, err := out.Write(result.Body); err != nil {
         panic(err)
     }
 }

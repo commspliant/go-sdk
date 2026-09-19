@@ -107,14 +107,10 @@ func validateRenderRequest(req RenderRequest) error {
 }
 
 func toRenderPayload(req RenderRequest) renderPayload {
-	payload := renderPayload{
+	return renderPayload{
 		TemplateID: req.TemplateID,
 		Variables:  req.Variables,
 	}
-	if req.TemplateVersionID != "" {
-		payload.TemplateVersionID = req.TemplateVersionID
-	}
-	return payload
 }
 
 func parseAPIError(resp *http.Response) error {

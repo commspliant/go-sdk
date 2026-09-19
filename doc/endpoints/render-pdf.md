@@ -16,8 +16,9 @@ Same auth rules as `POST /api/v1/render/html`.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `templateId` | UUID string | Yes | Template to render |
-| `templateVersionId` | UUID string | No | Explicit approved version override |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `templateId` | UUID string | Yes | Template to render (latest approved version is used) |
 | `variables` | object | Yes | Values for template placeholders |
 
 ## Response

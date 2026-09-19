@@ -11,15 +11,16 @@
 Resolves an **approved** template version and returns rendered HTML as a streamed response.
 
 - `templateId` is required.
-- `templateVersionId` is optional; when omitted, the latest approved version is used.
+- The latest approved version is always used.
 - `variables` supplies values for `{{placeholder}}` syntax in the template.
 
 ## Request
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `templateId` | UUID string | Yes | Template to render |
-| `templateVersionId` | UUID string | No | Explicit approved version override |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `templateId` | UUID string | Yes | Template to render (latest approved version is used) |
 | `variables` | object | Yes | Values for template placeholders |
 
 ## Response

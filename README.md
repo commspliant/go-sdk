@@ -5,7 +5,7 @@ Official Go client for the [CommsPliant Customer Integration API](https://develo
 ## Installation
 
 ```bash
-go get github.com/commspliant/go-sdk/commspliant@v0.1.0
+go get github.com/commspliant/go-sdk/commspliant@v0.2.0
 ```
 
 To work on the SDK itself, clone this repository and use a local path in your `go.mod`.

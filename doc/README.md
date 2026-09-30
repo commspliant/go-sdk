@@ -17,3 +17,7 @@ JWT user tokens are not accepted on these endpoints.
 |--------|----------|---------------|
 | POST | `/api/v1/render/html` | [Render HTML](endpoints/render-html.md) |
 | POST | `/api/v1/render/pdf` | [Render PDF](endpoints/render-pdf.md) |
+| POST | `/api/v1/render/batches` | [Submit batch](endpoints/render-batches.md) |
+| GET | `/api/v1/render/processes/{processBatchId}/outputs` | [List process outputs](endpoints/render-process-outputs.md) |
+| GET | `/api/v1/render/outputs/{outputId}` | [Download output](endpoints/render-output-download.md) |
+| POST | `/api/v1/render/outputs/download` | [Download ZIP](endpoints/render-outputs-download.md) |

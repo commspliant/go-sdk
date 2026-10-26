@@ -10,22 +10,24 @@ import (
 	"net/url"
 )
 
-// BatchPurpose selects integration batch output mode.
-type BatchPurpose string
+// IntegrationDeliveryChannel selects post-render delivery for integration batches.
+type IntegrationDeliveryChannel string
 
 const (
-	BatchPurposeEmail      BatchPurpose = "email"
-	BatchPurposePDF        BatchPurpose = "pdf"
-	BatchPurposeRenderOnly BatchPurpose = "render_only"
+	IntegrationDeliveryChannelNone   IntegrationDeliveryChannel = "none"
+	IntegrationDeliveryChannelEmail  IntegrationDeliveryChannel = "email"
+	IntegrationDeliveryChannelSMS    IntegrationDeliveryChannel = "sms"
+	IntegrationDeliveryChannelPostal IntegrationDeliveryChannel = "postal"
 )
 
 // RenderBatchSubmitRequest is the async batch submit body.
 type RenderBatchSubmitRequest struct {
-	ProcessBatchID string              `json:"processBatchId,omitempty"`
-	TemplateID     string              `json:"templateId"`
-	Purpose        BatchPurpose        `json:"purpose"`
-	Items          []RenderBatchItem   `json:"items"`
-	CallbackURL    string              `json:"callbackUrl,omitempty"`
+	ProcessBatchID  string                       `json:"processBatchId,omitempty"`
+	TemplateID      string                       `json:"templateId"`
+	DeliveryChannel IntegrationDeliveryChannel   `json:"deliveryChannel"`
+	Items           []RenderBatchItem            `json:"items"`
+	CallbackURL             string                       `json:"callbackUrl,omitempty"`
+	ExpectedDocumentCount   *int                         `json:"expectedDocumentCount,omitempty"`
 }
 
 // RenderBatchItem is one row in a batch.
@@ -70,20 +72,38 @@ type PageMeta struct {
 	Total    int64 `json:"total"`
 }
 
-// SubmitRenderBatch enqueues an async integration render batch.
-func (c *Client) SubmitRenderBatch(ctx context.Context, req RenderBatchSubmitRequest) (*RenderBatchSubmitResponse, error) {
+// SubmitRenderBatchHtml enqueues an async HTML integration render batch.
+func (c *Client) SubmitRenderBatchHtml(ctx context.Context, req RenderBatchSubmitRequest) (*RenderBatchSubmitResponse, error) {
+	return c.submitRenderBatch(ctx, "/api/v1/render/batches/html", req)
+}
+
+// SubmitRenderBatchPdf enqueues an async PDF integration render batch.
+func (c *Client) SubmitRenderBatchPdf(ctx context.Context, req RenderBatchSubmitRequest) (*RenderBatchSubmitResponse, error) {
+	return c.submitRenderBatch(ctx, "/api/v1/render/batches/pdf", req)
+}
+
+func (c *Client) submitRenderBatch(ctx context.Context, path string, req RenderBatchSubmitRequest) (*RenderBatchSubmitResponse, error) {
 	if err := validateBatchSubmitRequest(req); err != nil {
 		return nil, err
 	}
 	var out RenderBatchSubmitResponse
-	if err := c.postJSON(ctx, "/api/v1/render/batches", req, http.StatusAccepted, &out); err != nil {
+	if err := c.postJSON(ctx, path, req, http.StatusAccepted, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
 }
 
-// ListRenderProcessOutputs lists outputs for a processBatchId.
-func (c *Client) ListRenderProcessOutputs(ctx context.Context, processBatchID string, opts ListRenderProcessOutputsOptions) (*IntegrationProcessOutputsPage, error) {
+// ListRenderProcessHtmlOutputs lists HTML outputs for a processBatchId.
+func (c *Client) ListRenderProcessHtmlOutputs(ctx context.Context, processBatchID string, opts ListRenderProcessOutputsOptions) (*IntegrationProcessOutputsPage, error) {
+	return c.listRenderProcessOutputs(ctx, processBatchID, "html", opts)
+}
+
+// ListRenderProcessPdfOutputs lists PDF outputs for a processBatchId.
+func (c *Client) ListRenderProcessPdfOutputs(ctx context.Context, processBatchID string, opts ListRenderProcessOutputsOptions) (*IntegrationProcessOutputsPage, error) {
+	return c.listRenderProcessOutputs(ctx, processBatchID, "pdf", opts)
+}
+
+func (c *Client) listRenderProcessOutputs(ctx context.Context, processBatchID, format string, opts ListRenderProcessOutputsOptions) (*IntegrationProcessOutputsPage, error) {
 	if processBatchID == "" {
 		return nil, fmt.Errorf("processBatchId is required")
 	}
@@ -94,7 +114,7 @@ func (c *Client) ListRenderProcessOutputs(ctx context.Context, processBatchID st
 	if opts.PageSize > 0 {
 		q.Set("pageSize", fmt.Sprintf("%d", opts.PageSize))
 	}
-	path := "/api/v1/render/processes/" + processBatchID + "/outputs"
+	path := fmt.Sprintf("/api/v1/render/processes/%s/outputs/%s", processBatchID, format)
 	if len(q) > 0 {
 		path += "?" + q.Encode()
 	}
@@ -105,16 +125,34 @@ func (c *Client) ListRenderProcessOutputs(ctx context.Context, processBatchID st
 	return &out, nil
 }
 
-// DownloadRenderOutput streams one output by id.
-func (c *Client) DownloadRenderOutput(ctx context.Context, outputID string) (*RenderResult, error) {
+// DownloadRenderHtmlOutput streams one HTML output by id.
+func (c *Client) DownloadRenderHtmlOutput(ctx context.Context, outputID string) (*RenderResult, error) {
+	return c.downloadRenderOutput(ctx, "html", outputID)
+}
+
+// DownloadRenderPdfOutput streams one PDF output by id.
+func (c *Client) DownloadRenderPdfOutput(ctx context.Context, outputID string) (*RenderResult, error) {
+	return c.downloadRenderOutput(ctx, "pdf", outputID)
+}
+
+func (c *Client) downloadRenderOutput(ctx context.Context, format, outputID string) (*RenderResult, error) {
 	if outputID == "" {
 		return nil, fmt.Errorf("outputId is required")
 	}
-	return c.getBinary(ctx, "/api/v1/render/outputs/"+outputID)
+	return c.getBinary(ctx, fmt.Sprintf("/api/v1/render/outputs/%s/%s", format, outputID))
 }
 
-// DownloadRenderOutputsZip downloads a ZIP of the given output ids.
-func (c *Client) DownloadRenderOutputsZip(ctx context.Context, outputIDs []string) (*RenderResult, error) {
+// DownloadRenderHtmlOutputsZip downloads a ZIP of the given HTML output ids.
+func (c *Client) DownloadRenderHtmlOutputsZip(ctx context.Context, outputIDs []string) (*RenderResult, error) {
+	return c.downloadRenderOutputsZip(ctx, "html", outputIDs)
+}
+
+// DownloadRenderPdfOutputsZip downloads a ZIP of the given PDF output ids.
+func (c *Client) DownloadRenderPdfOutputsZip(ctx context.Context, outputIDs []string) (*RenderResult, error) {
+	return c.downloadRenderOutputsZip(ctx, "pdf", outputIDs)
+}
+
+func (c *Client) downloadRenderOutputsZip(ctx context.Context, format string, outputIDs []string) (*RenderResult, error) {
 	if len(outputIDs) == 0 {
 		return nil, fmt.Errorf("outputIds is required")
 	}
@@ -122,7 +160,8 @@ func (c *Client) DownloadRenderOutputsZip(ctx context.Context, outputIDs []strin
 	if err != nil {
 		return nil, err
 	}
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/api/v1/render/outputs/download", bytes.NewReader(body))
+	path := fmt.Sprintf("/api/v1/render/outputs/%s/download", format)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +186,8 @@ func validateBatchSubmitRequest(req RenderBatchSubmitRequest) error {
 	if req.TemplateID == "" {
 		return fmt.Errorf("templateId is required")
 	}
-	if req.Purpose == "" {
-		return fmt.Errorf("purpose is required")
+	if req.DeliveryChannel == "" {
+		return fmt.Errorf("deliveryChannel is required")
 	}
 	if len(req.Items) == 0 {
 		return fmt.Errorf("items is required")

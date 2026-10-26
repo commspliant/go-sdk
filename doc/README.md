@@ -21,3 +21,17 @@ JWT user tokens are not accepted on these endpoints.
 | GET | `/api/v1/render/processes/{processBatchId}/outputs` | [List process outputs](endpoints/render-process-outputs.md) |
 | GET | `/api/v1/render/outputs/{outputId}` | [Download output](endpoints/render-output-download.md) |
 | POST | `/api/v1/render/outputs/download` | [Download ZIP](endpoints/render-outputs-download.md) |
+
+## Integration batch (async)
+
+| Method | Path | Doc |
+|--------|------|-----|
+| POST | `/api/v1/render/batches/html` | [Submit HTML batch](endpoints/render-batches.md) |
+| POST | `/api/v1/render/batches/pdf` | [Submit PDF batch](endpoints/render-batches.md) |
+| GET | `/api/v1/render/processes/{id}/outputs/html` | List HTML outputs |
+| GET | `/api/v1/render/processes/{id}/outputs/pdf` | List PDF outputs |
+| GET | `/api/v1/render/outputs/html/{outputId}` | Download HTML |
+| GET | `/api/v1/render/outputs/pdf/{outputId}` | Download PDF |
+| POST | `/api/v1/render/outputs/html/download` | ZIP HTML |
+| POST | `/api/v1/render/outputs/pdf/download` | ZIP PDF |
+

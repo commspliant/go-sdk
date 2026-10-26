@@ -30,7 +30,7 @@ Same auth rules as `POST /api/v1/render/html`.
 
 | Status | Meaning |
 |--------|---------|
-| 400 | Invalid request body or parameters. When required sample-data fields are missing from `variables`, includes `code: validation_failed` and `details.missingFields`. |
+| 400 | `code: validation_failed` with `details.missingFields` (required variables) or `details.field` / `details.reason` (e.g. missing `templateId`). |
 | 401 | Missing or invalid API key |
 | 403 | Valid API key but missing `render.execute` permission |
 | 404 | Template not found or not visible in the key's organization |
